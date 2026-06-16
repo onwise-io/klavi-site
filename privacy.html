@@ -6,28 +6,76 @@
 <title>Klavi — Privacy Policy</title>
 <link rel="icon" href="favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="icon.png">
+<meta name="description" content="Klavi collects nothing. It runs entirely on your Mac, with no analytics, no account, and no network connections.">
 <style>
-  :root { color-scheme: light dark; }
-  body { margin: 0; font: 17px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-         color: #1d1d1f; background: #fff; }
-  .wrap { max-width: 720px; margin: 0 auto; padding: 56px 24px; }
-  h1 { font-size: 34px; letter-spacing:-.02em; margin: 0 0 4px; }
-  .date { color:#888; margin: 0 0 32px; }
-  h2 { font-size: 22px; margin: 36px 0 8px; }
-  a { color: #2a6bff; }
-  footer { margin-top: 56px; color:#888; font-size:14px; }
-  @media (prefers-color-scheme: dark){ body{background:#000;color:#f5f5f7;} .date,footer{color:#888;} }
+  @font-face{font-family:"Bricolage";src:url("fonts/bricolage-grotesque.woff2") format("woff2");font-weight:200 800;font-display:swap;}
+  @font-face{font-family:"Hanken";src:url("fonts/hanken-grotesk.woff2") format("woff2");font-weight:300 800;font-display:swap;}
+  :root{
+    --ink:#1b2347;--ink-soft:#5a6390;--ink-faint:#9298b3;
+    --brand:#5267b0;--brand-deep:#3d4f96;--brand-light:#c6cbe7;
+    --tint-2:#eef1fb;--line:#e6e9f6;
+    --display:"Bricolage","Hanken",-apple-system,system-ui,sans-serif;
+    --body:"Hanken",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;background:#fff;color:var(--ink);font-family:var(--body);
+    font-size:18px;line-height:1.68;-webkit-font-smoothing:antialiased;}
+  ::selection{background:var(--brand-light);color:var(--ink);}
+  a{color:var(--brand);text-decoration:none;}a:hover{color:var(--brand-deep);}
+  svg{display:block;}
+
+  header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.72);
+    backdrop-filter:saturate(180%) blur(14px);-webkit-backdrop-filter:saturate(180%) blur(14px);
+    border-bottom:1px solid var(--line);}
+  .nav{max-width:760px;margin:0 auto;padding:0 28px;height:64px;display:flex;align-items:center;}
+  .brand{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:700;
+    font-size:20px;letter-spacing:-.02em;color:var(--ink);}
+  .brand svg{width:22px;height:27px;}
+
+  .wrap{max-width:760px;margin:0 auto;padding:64px 28px 0;}
+  .eyebrow{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:12.5px;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--brand);font-weight:600;margin:0;}
+  h1{font-family:var(--display);font-weight:700;letter-spacing:-.03em;
+    font-size:clamp(34px,5.5vw,52px);line-height:1.05;margin:14px 0 0;}
+  .date{color:var(--ink-faint);font-size:15px;margin:14px 0 0;}
+  .intro{font-size:20px;color:var(--ink-soft);margin:26px 0 0;}
+  hr{border:0;border-top:1px solid var(--line);margin:40px 0;}
+  h2{font-family:var(--display);font-weight:600;letter-spacing:-.01em;font-size:24px;margin:40px 0 8px;}
+  p{margin:0 0 14px;}
+  ul{padding-left:22px;margin:0 0 14px;}
+  li{margin:6px 0;}
+  .note{background:var(--tint-2);border:1px solid var(--line);border-radius:16px;
+    padding:22px 26px;margin:28px 0;color:var(--ink);font-size:16.5px;}
+  footer{border-top:1px solid var(--line);margin-top:64px;padding:34px 0;}
+  .foot{max-width:760px;margin:0 auto;padding:0 28px;display:flex;justify-content:space-between;
+    flex-wrap:wrap;gap:14px;color:var(--ink-faint);font-size:14.5px;}
+  .foot a{color:var(--ink-soft);}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <h1>Klavi — Privacy Policy</h1>
-  <p class="date">Last updated: 2026</p>
+<header>
+  <div class="nav">
+    <a class="brand" href="index.html" aria-label="Klavi home">
+      <svg viewBox="0 0 106.89 128.28" aria-hidden="true">
+        <path d="M103.37,122.77c-3.75,4.19-9.21,6.04-14.74,5.34-3.99-.51-7.39-2.4-10.04-5.47l-32.25-37.4c-9.33-10.81-10.18-30.28-1.93-41.85L70.9,6.27c1.41-1.98,3.28-3.37,5.41-4.46,8.3-4.25,19.5-.74,22.7,8.29,1.62,4.58,1.06,9.55-1.68,13.38l-26.46,36.95c-1.35,1.88-1.68,4.35-.06,6.23l31.86,36.93c5.34,5.28,5.67,13.39.71,19.18Z" fill="#c6cbe7"/>
+        <path d="M23.98,126.22c-6.12,3.41-13.73,2.5-18.83-2.07C1.85,121.19,0,117.21,0,112.73V15.52C.01,8.36,4.9,2.23,11.77.53c3.11-.77,6.16-.72,9.25.21,6.38,1.93,11,7.75,11,14.57l.02,97.75c0,5.52-3.22,10.45-8.05,13.14Z" fill="#5267b0"/>
+      </svg>
+      Klavi
+    </a>
+  </div>
+</header>
 
-  <p>Klavi is designed to be private by default. It runs entirely on your Mac.</p>
+<main class="wrap">
+  <p class="eyebrow">Privacy Policy</p>
+  <h1>Private by default.</h1>
+  <p class="date">Last updated: 2026</p>
+  <p class="intro">Klavi is designed to be private by default. It runs entirely on your Mac.</p>
+
+  <hr>
 
   <h2>What we collect</h2>
-  <p><strong>Nothing.</strong> Klavi does not collect, store, log, or transmit any personal data or anything you type. There are no analytics, no advertising SDKs, no crash reporters, and no network connections of any kind.</p>
+  <div class="note"><strong>Nothing.</strong> Klavi does not collect, store, log, or transmit any personal data or anything you type. There are no analytics, no advertising SDKs, no crash reporters, and no network connections of any kind.</div>
 
   <h2>Accessibility access</h2>
   <p>Klavi requires macOS <strong>Accessibility</strong> permission. It is used solely to:</p>
@@ -45,8 +93,13 @@
 
   <h2>Contact</h2>
   <p>Questions about this policy: <a href="mailto:openwise.ltd@gmail.com">openwise.ltd@gmail.com</a></p>
+</main>
 
-  <footer>© 2026 OnWise · <a href="index.html">Klavi</a></footer>
-</div>
+<footer>
+  <div class="foot">
+    <span>© 2026 OnWise · Klavi</span>
+    <a href="index.html">← Back to Klavi</a>
+  </div>
+</footer>
 </body>
 </html>

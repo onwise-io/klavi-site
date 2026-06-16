@@ -3,66 +3,357 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Klavi — Keyboard Layout Corrector</title>
+<title>Klavi — Keyboard Layout Corrector for macOS</title>
 <link rel="icon" href="favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="icon.png">
+<meta name="description" content="Type in the wrong keyboard layout? Klavi fixes the word and switches the layout automatically — 21 languages, fully on your device, zero tracking.">
 <meta property="og:title" content="Klavi — Keyboard Layout Corrector">
-<meta property="og:description" content="Type in the wrong keyboard layout? Klavi fixes the word and switches the layout automatically — 18 languages, fully on your device.">
+<meta property="og:description" content="Fixes a word typed in the wrong keyboard layout and switches the language for you — 21 languages, 100% on-device.">
 <meta property="og:image" content="icon.png">
 <meta property="og:type" content="website">
 <style>
-  :root { color-scheme: light dark; }
-  * { box-sizing: border-box; }
-  body { margin: 0; font: 17px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-         color: #1d1d1f; background: #fff; }
-  .wrap { max-width: 720px; margin: 0 auto; padding: 64px 24px; }
-  .logo { width: 96px; height: 96px; display: block; }
-  h1 { font-size: 40px; letter-spacing:-.02em; margin: 28px 0 6px; }
-  .tag { font-size: 21px; color:#555; margin: 0 0 32px; }
-  .demo { width:100%; height:auto; border-radius:16px; display:block; margin:24px 0 8px;
-          box-shadow: 0 10px 34px rgba(20,30,70,.14); }
-  .demo + .cap { font-size:14px; color:#888; margin:0 0 24px; }
-  h2 { font-size: 24px; margin: 44px 0 10px; }
-  ul { padding-left: 20px; }
-  a { color: #2a6bff; }
-  .card { background:#f5f5f7; border-radius:16px; padding:24px 28px; margin-top:16px; }
-  footer { margin-top: 64px; color:#888; font-size:14px; }
-  @media (prefers-color-scheme: dark){
-    body{background:#000;color:#f5f5f7;} .card{background:#1c1c1e;} .tag{color:#aaa;} footer{color:#777;}
+  @font-face{font-family:"Bricolage";src:url("fonts/bricolage-grotesque.woff2") format("woff2");font-weight:200 800;font-display:swap;}
+  @font-face{font-family:"Hanken";src:url("fonts/hanken-grotesk.woff2") format("woff2");font-weight:300 800;font-display:swap;}
+
+  :root{
+    --bg:#ffffff;
+    --ink:#1b2347;          /* primary dark navy */
+    --ink-soft:#5a6390;     /* secondary */
+    --ink-faint:#9298b3;    /* tertiary */
+    --brand:#5267b0;        /* the dark bar of the K */
+    --brand-deep:#3d4f96;   /* hover / strong */
+    --brand-light:#c6cbe7;  /* the light chevron of the K */
+    --tint:#f4f6fd;         /* card / section fill */
+    --tint-2:#eef1fb;       /* stronger tint band */
+    --line:#e6e9f6;         /* hairline */
+    --shadow:24px 40px 80px -36px rgba(31,42,90,.45);
+    --display:"Bricolage","Hanken",-apple-system,system-ui,sans-serif;
+    --body:"Hanken",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    --mono:ui-monospace,"SF Mono","Menlo","Cascadia Code",monospace;
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;}
+  body{
+    margin:0;background:var(--bg);color:var(--ink);
+    font-family:var(--body);font-size:18px;line-height:1.6;font-weight:400;
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+    overflow-x:hidden;
+  }
+  ::selection{background:var(--brand-light);color:var(--ink);}
+  a{color:var(--brand);text-decoration:none;}
+  a:hover{color:var(--brand-deep);}
+  img{max-width:100%;display:block;}
+
+  .wrap{max-width:1080px;margin:0 auto;padding:0 28px;}
+  .eyebrow{
+    font-family:var(--mono);font-size:12.5px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--brand);font-weight:600;
+  }
+
+  /* ---- atmosphere ---- */
+  .glow{position:fixed;border-radius:50%;filter:blur(60px);z-index:-2;pointer-events:none;opacity:.5;}
+  .glow.a{top:-220px;right:-160px;width:560px;height:560px;
+    background:radial-gradient(circle at 50% 50%,rgba(154,168,224,.55),transparent 70%);}
+  .glow.b{bottom:-260px;left:-200px;width:620px;height:620px;
+    background:radial-gradient(circle at 50% 50%,rgba(198,203,231,.5),transparent 70%);}
+  .kmark{position:absolute;z-index:-1;opacity:.045;pointer-events:none;}
+
+  /* ---- top bar ---- */
+  header{position:sticky;top:0;z-index:50;
+    backdrop-filter:saturate(180%) blur(14px);-webkit-backdrop-filter:saturate(180%) blur(14px);
+    background:rgba(255,255,255,.72);border-bottom:1px solid transparent;transition:border-color .3s,background .3s;}
+  header.scrolled{border-bottom-color:var(--line);}
+  .nav{display:flex;align-items:center;justify-content:space-between;height:68px;}
+  .brand{display:flex;align-items:center;gap:11px;font-family:var(--display);font-weight:700;
+    font-size:21px;letter-spacing:-.02em;color:var(--ink);}
+  .brand svg{width:24px;height:29px;display:block;}
+  .navlinks{display:flex;align-items:center;gap:30px;}
+  .navlinks a{font-size:15px;font-weight:500;color:var(--ink-soft);}
+  .navlinks a:hover{color:var(--ink);}
+  .navlinks .cta{padding:9px 18px;border-radius:999px;background:var(--ink);color:#fff;font-weight:600;}
+  .navlinks .cta:hover{background:var(--brand-deep);color:#fff;}
+  @media(max-width:720px){.navlinks a:not(.cta){display:none;}}
+
+  /* ---- hero ---- */
+  .hero{position:relative;text-align:center;padding:84px 0 12px;}
+  .hero .kmark{width:540px;top:-60px;left:50%;transform:translateX(-50%);}
+  .hero h1{font-family:var(--display);font-weight:700;letter-spacing:-.035em;
+    font-size:clamp(42px,7vw,84px);line-height:1.02;margin:22px auto 0;max-width:13ch;}
+  .hero h1 .hl{color:var(--brand);}
+  .hero .lede{font-size:clamp(18px,2.3vw,22px);color:var(--ink-soft);
+    max-width:30ch;margin:22px auto 0;line-height:1.5;}
+
+  .fixchip{display:inline-flex;align-items:center;gap:14px;margin:30px auto 0;
+    padding:12px 20px;border:1px solid var(--line);border-radius:14px;background:#fff;
+    box-shadow:0 6px 22px -14px rgba(31,42,90,.3);}
+  .fixchip .was{font-family:var(--mono);font-size:18px;color:var(--ink-faint);text-decoration:line-through;text-decoration-thickness:1.5px;}
+  .fixchip .now{font-weight:700;font-size:19px;color:var(--brand);}
+  .fixchip svg{width:30px;height:14px;color:var(--brand);flex:none;}
+  .fixchip .tag{font-family:var(--mono);font-size:12px;letter-spacing:.05em;color:var(--ink-faint);
+    border-left:1px solid var(--line);padding-left:14px;}
+
+  /* device card holding a GIF */
+  .device{position:relative;margin:54px auto 0;max-width:920px;}
+  .device::before{content:"";position:absolute;inset:6% 10% -10%;z-index:-1;border-radius:40px;
+    background:radial-gradient(60% 80% at 50% 0,rgba(82,103,176,.34),transparent 72%);filter:blur(34px);}
+  .device img{width:100%;border-radius:20px;border:1px solid var(--line);box-shadow:var(--shadow);}
+  .cap{font-size:14.5px;color:var(--ink-faint);text-align:center;margin:18px auto 0;max-width:46ch;}
+
+  /* ---- sections ---- */
+  section{position:relative;padding:96px 0;}
+  .sechead{max-width:620px;}
+  .sechead.center{margin:0 auto;text-align:center;}
+  h2{font-family:var(--display);font-weight:700;letter-spacing:-.03em;
+    font-size:clamp(30px,4.4vw,46px);line-height:1.06;margin:14px 0 0;color:var(--ink);}
+  .seclede{font-size:18.5px;color:var(--ink-soft);margin:16px 0 0;line-height:1.55;}
+
+  /* feature grid */
+  .features{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;margin-top:52px;}
+  @media(max-width:720px){.features{grid-template-columns:1fr;}}
+  .card{background:var(--tint);border:1px solid var(--line);border-radius:20px;padding:30px 30px 32px;
+    transition:transform .25s ease,box-shadow .25s ease,border-color .25s ease;}
+  .card:hover{transform:translateY(-3px);box-shadow:0 22px 44px -30px rgba(31,42,90,.5);border-color:var(--brand-light);}
+  .ic{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;
+    background:#fff;border:1px solid var(--line);color:var(--brand);margin-bottom:18px;}
+  .ic svg{width:22px;height:22px;}
+  .card h3{font-family:var(--display);font-weight:600;font-size:20px;letter-spacing:-.01em;margin:0 0 7px;}
+  .card p{margin:0;color:var(--ink-soft);font-size:16px;line-height:1.55;}
+
+  /* languages */
+  .langs{text-align:center;}
+  .chips{display:flex;flex-wrap:wrap;justify-content:center;gap:11px;margin:44px auto 0;max-width:880px;}
+  .chip{padding:10px 18px;border-radius:999px;background:var(--tint);border:1px solid var(--line);
+    font-size:16px;font-weight:500;color:var(--ink);transition:background .2s,border-color .2s,transform .2s;}
+  .chip:hover{background:var(--tint-2);border-color:var(--brand-light);transform:translateY(-2px);}
+  .chip.rtl{direction:rtl;}
+
+  /* privacy band */
+  .band{background:linear-gradient(180deg,var(--tint-2),#fff);border-top:1px solid var(--line);border-bottom:1px solid var(--line);}
+  .privacy{display:grid;grid-template-columns:1.1fr 1fr;gap:54px;align-items:center;}
+  @media(max-width:760px){.privacy{grid-template-columns:1fr;gap:32px;}}
+  .checks{list-style:none;padding:0;margin:30px 0 0;display:grid;gap:16px;}
+  .checks li{display:flex;align-items:flex-start;gap:14px;font-size:17px;color:var(--ink);}
+  .checks .tick{flex:none;width:28px;height:28px;border-radius:50%;background:var(--brand);
+    display:grid;place-items:center;margin-top:1px;}
+  .checks .tick svg{width:15px;height:15px;color:#fff;}
+  .shieldwrap{display:grid;place-items:center;}
+  .shieldwrap svg{width:min(260px,70%);height:auto;filter:drop-shadow(0 26px 40px rgba(82,103,176,.32));}
+
+  /* support */
+  .support{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:24px;
+    background:var(--ink);color:#fff;border-radius:24px;padding:40px 44px;}
+  .support h2{color:#fff;margin:0;}
+  .support p{margin:10px 0 0;color:#c7cce6;font-size:16.5px;}
+  .support .mailbtn{background:#fff;color:var(--ink);padding:15px 26px;border-radius:999px;font-weight:600;
+    white-space:nowrap;transition:transform .2s,background .2s;}
+  .support .mailbtn:hover{transform:translateY(-2px);background:var(--brand-light);color:var(--ink);}
+
+  /* footer */
+  footer{border-top:1px solid var(--line);padding:38px 0;}
+  .foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px;
+    color:var(--ink-faint);font-size:14.5px;}
+  .foot .brand{font-size:17px;}
+  .foot a{color:var(--ink-soft);}
+  .foot nav{display:flex;gap:22px;}
+
+  /* motion */
+  .reveal{opacity:0;transform:translateY(20px);transition:opacity .7s cubic-bezier(.2,.7,.2,1),transform .7s cubic-bezier(.2,.7,.2,1);}
+  .reveal.in{opacity:1;transform:none;}
+  @keyframes rise{from{opacity:0;transform:translateY(22px);}to{opacity:1;transform:none;}}
+  .hero .eyebrow,.hero h1,.hero .lede,.hero .fixchip,.hero .device{animation:rise .9s cubic-bezier(.2,.7,.2,1) both;}
+  .hero h1{animation-delay:.07s;}
+  .hero .lede{animation-delay:.15s;}
+  .hero .fixchip{animation-delay:.23s;}
+  .hero .device{animation-delay:.32s;}
+  @media(prefers-reduced-motion:reduce){
+    *{animation:none!important;transition:none!important;}
+    .reveal{opacity:1;transform:none;}
+    html{scroll-behavior:auto;}
   }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <img class="logo" src="icon.png" alt="Klavi app icon" width="96" height="96">
-  <h1>Klavi</h1>
-  <p class="tag">Type in the wrong keyboard layout? Klavi fixes the word and switches the layout automatically — across 21 languages, fully on your device.</p>
+<div class="glow a"></div>
+<div class="glow b"></div>
 
-  <img class="demo" src="shot1.gif" alt="Klavi fixing a mistyped word and switching the layout across Ukrainian, Russian and Greek" width="1280" height="800" loading="lazy">
-  <p class="cap">Same phrase, three layouts — Klavi fixes the word and switches the language instantly.</p>
-
-  <h2>Support</h2>
-  <div class="card">
-    <p>Questions, bugs, or feedback? We're happy to help.</p>
-    <p><strong>Email:</strong> <a href="mailto:openwise.ltd@gmail.com">openwise.ltd@gmail.com</a></p>
-    <p>We typically reply within 1–2 business days.</p>
+<header id="top">
+  <div class="wrap nav">
+    <a class="brand" href="#top" aria-label="Klavi">
+      <svg viewBox="0 0 106.89 128.28" aria-hidden="true">
+        <path d="M103.37,122.77c-3.75,4.19-9.21,6.04-14.74,5.34-3.99-.51-7.39-2.4-10.04-5.47l-32.25-37.4c-9.33-10.81-10.18-30.28-1.93-41.85L70.9,6.27c1.41-1.98,3.28-3.37,5.41-4.46,8.3-4.25,19.5-.74,22.7,8.29,1.62,4.58,1.06,9.55-1.68,13.38l-26.46,36.95c-1.35,1.88-1.68,4.35-.06,6.23l31.86,36.93c5.34,5.28,5.67,13.39.71,19.18Z" fill="#c6cbe7"/>
+        <path d="M23.98,126.22c-6.12,3.41-13.73,2.5-18.83-2.07C1.85,121.19,0,117.21,0,112.73V15.52C.01,8.36,4.9,2.23,11.77.53c3.11-.77,6.16-.72,9.25.21,6.38,1.93,11,7.75,11,14.57l.02,97.75c0,5.52-3.22,10.45-8.05,13.14Z" fill="#5267b0"/>
+      </svg>
+      Klavi
+    </a>
+    <nav class="navlinks">
+      <a href="#how">How it works</a>
+      <a href="#languages">Languages</a>
+      <a href="#privacy">Privacy</a>
+      <a class="cta" href="#support">Get in touch</a>
+    </nav>
   </div>
+</header>
 
-  <h2>What Klavi does</h2>
-  <ul>
-    <li>Automatic layout correction on each finished word.</li>
-    <li>21 languages — English, Ukrainian, Russian, German, French, Spanish, Italian, Polish, Portuguese, Indonesian, Turkish, Dutch, Romanian, Greek, Bulgarian, Czech, Hungarian, Swedish, Hebrew, Arabic, Serbian.</li>
-    <li>Double-tap Shift to convert or undo a word by hand — it learns your words.</li>
-    <li>100% on-device. No tracking, no account, never reads password fields.</li>
-  </ul>
+<main>
+  <!-- HERO -->
+  <section class="hero">
+    <div class="wrap">
+      <svg class="kmark" viewBox="0 0 106.89 128.28" aria-hidden="true">
+        <path d="M103.37,122.77c-3.75,4.19-9.21,6.04-14.74,5.34-3.99-.51-7.39-2.4-10.04-5.47l-32.25-37.4c-9.33-10.81-10.18-30.28-1.93-41.85L70.9,6.27c1.41-1.98,3.28-3.37,5.41-4.46,8.3-4.25,19.5-.74,22.7,8.29,1.62,4.58,1.06,9.55-1.68,13.38l-26.46,36.95c-1.35,1.88-1.68,4.35-.06,6.23l31.86,36.93c5.34,5.28,5.67,13.39.71,19.18Z" fill="#5267b0"/>
+        <path d="M23.98,126.22c-6.12,3.41-13.73,2.5-18.83-2.07C1.85,121.19,0,117.21,0,112.73V15.52C.01,8.36,4.9,2.23,11.77.53c3.11-.77,6.16-.72,9.25.21,6.38,1.93,11,7.75,11,14.57l.02,97.75c0,5.52-3.22,10.45-8.05,13.14Z" fill="#5267b0"/>
+      </svg>
+      <p class="eyebrow">macOS · 100% on-device</p>
+      <h1>Typed in the wrong layout? Klavi <span class="hl">fixes it.</span></h1>
+      <p class="lede">Klavi catches a word typed in the wrong keyboard layout, corrects it, and switches the language for you — across 21 languages.</p>
 
-  <img class="demo" src="shot5.gif" alt="Double-tap Shift to convert the last word by hand, shown for Ukrainian, Russian and Greek" width="1280" height="800" loading="lazy">
-  <p class="cap">Double-tap Shift to convert or undo the last word yourself.</p>
+      <div class="fixchip" role="img" aria-label="ghbdfn corrected to privit, switched to Ukrainian">
+        <span class="was">ghbdfn</span>
+        <svg viewBox="0 0 30 14" fill="none" aria-hidden="true"><path d="M1 7h26M22 2l6 5-6 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="now">привіт</span>
+        <span class="tag">EN→UA</span>
+      </div>
 
-  <h2>Privacy</h2>
-  <p>Klavi collects nothing. Read the full <a href="privacy.html">Privacy Policy</a>.</p>
+      <figure class="device">
+        <img src="shot1-web.gif" width="820" height="455" loading="eager"
+             alt="Klavi correcting a mistyped word and switching the layout across Ukrainian, Polish, Greek and Hebrew">
+      </figure>
+      <figcaption class="cap">One phrase, four layouts — Klavi fixes the word and switches the language instantly.</figcaption>
+    </div>
+  </section>
 
-  <footer>© 2026 OnWise · Klavi</footer>
-</div>
+  <!-- HOW IT WORKS -->
+  <section id="how">
+    <div class="wrap">
+      <div class="sechead reveal">
+        <p class="eyebrow">How it works</p>
+        <h2>Built to stay out of your way.</h2>
+        <p class="seclede">No window, no shortcuts to memorize. Klavi watches for the telltale gibberish of a wrong layout and quietly puts it right.</p>
+      </div>
+      <div class="features">
+        <div class="card reveal">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none"><path d="M4 12.5l5 5 11-11" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <h3>Automatic correction</h3>
+          <p>The moment you finish a word, Klavi checks every enabled layout and fixes it if it only makes sense in another language.</p>
+        </div>
+        <div class="card reveal">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none"><path d="M12 4v10m0-10l-4 4m4-4l4 4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><rect x="4" y="17" width="16" height="3.4" rx="1.7" fill="currentColor"/></svg></div>
+          <h3>Double-tap Shift</h3>
+          <p>Convert or undo the last word by hand. Klavi learns your choice and won’t touch that word again.</p>
+        </div>
+        <div class="card reveal">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none"><rect x="3.5" y="5" width="17" height="14" rx="3" stroke="currentColor" stroke-width="2"/><path d="M8 12h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
+          <h3>Per-app memory</h3>
+          <p>Klavi remembers the layout each app last used and restores it the moment you switch back.</p>
+        </div>
+        <div class="card reveal">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></div>
+          <h3>Private by design</h3>
+          <p>No analytics, no account, no network connection of any kind. Password fields are never read.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DOUBLE TAP -->
+  <section style="padding-top:0;">
+    <div class="wrap">
+      <div class="sechead center reveal">
+        <p class="eyebrow">Your call, always</p>
+        <h2>Fix it yourself with a double-tap.</h2>
+      </div>
+      <figure class="device reveal" style="max-width:760px;">
+        <img src="shot5-web.gif" width="800" height="410" loading="lazy"
+             alt="Double-tap Shift to convert the last word by hand, shown across four languages">
+      </figure>
+      <figcaption class="cap">Tap Shift twice to convert the last word — or undo a fix Klavi made.</figcaption>
+    </div>
+  </section>
+
+  <!-- LANGUAGES -->
+  <section id="languages" class="band">
+    <div class="wrap langs">
+      <div class="sechead center reveal">
+        <p class="eyebrow">21 languages</p>
+        <h2>Most switchers do two.</h2>
+        <p class="seclede" style="margin-left:auto;margin-right:auto;">From Ukrainian and Polish to Greek, Hebrew, Arabic and Serbian — every one of them on-device.</p>
+      </div>
+      <div class="chips reveal">
+        <span class="chip">English</span><span class="chip">Українська</span><span class="chip">Русский</span>
+        <span class="chip">Deutsch</span><span class="chip">Français</span><span class="chip">Español</span>
+        <span class="chip">Italiano</span><span class="chip">Polski</span><span class="chip">Português</span>
+        <span class="chip">Indonesia</span><span class="chip">Türkçe</span><span class="chip">Nederlands</span>
+        <span class="chip">Română</span><span class="chip">Ελληνικά</span><span class="chip">Български</span>
+        <span class="chip">Čeština</span><span class="chip">Magyar</span><span class="chip">Svenska</span>
+        <span class="chip rtl">עברית</span><span class="chip rtl">العربية</span><span class="chip">Srpski</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRIVACY -->
+  <section id="privacy">
+    <div class="wrap privacy">
+      <div class="reveal">
+        <p class="eyebrow">Privacy</p>
+        <h2>Nothing leaves your Mac.</h2>
+        <p class="seclede">Klavi has no servers to talk to. Keystrokes are processed in memory, in real time, and never written to disk or sent anywhere.</p>
+        <ul class="checks">
+          <li><span class="tick"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4 10-10" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>No analytics, no tracking, no servers</li>
+          <li><span class="tick"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4 10-10" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>No account — it works the moment you launch</li>
+          <li><span class="tick"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4 10-10" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Secure password fields are never read</li>
+        </ul>
+        <p style="margin-top:26px;"><a href="privacy.html">Read the full Privacy Policy&nbsp;→</a></p>
+      </div>
+      <div class="shieldwrap reveal">
+        <svg viewBox="0 0 200 220" fill="none" aria-hidden="true">
+          <defs><linearGradient id="sh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5c70be"/><stop offset="1" stop-color="#42539c"/></linearGradient></defs>
+          <path d="M100 10l78 30v66c0 56-38 86-78 104-40-18-78-48-78-104V40l78-30z" fill="url(#sh)"/>
+          <path d="M64 112l24 24 48-58" stroke="#fff" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- SUPPORT -->
+  <section id="support" style="padding-top:0;">
+    <div class="wrap">
+      <div class="support reveal">
+        <div>
+          <h2>Questions or feedback?</h2>
+          <p>We’re a small team and we read every message — usually replying within 1–2 business days.</p>
+        </div>
+        <a class="mailbtn" href="mailto:openwise.ltd@gmail.com">openwise.ltd@gmail.com</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <a class="brand" href="#top" aria-label="Klavi">
+      <svg viewBox="0 0 106.89 128.28" width="20" height="24" aria-hidden="true">
+        <path d="M103.37,122.77c-3.75,4.19-9.21,6.04-14.74,5.34-3.99-.51-7.39-2.4-10.04-5.47l-32.25-37.4c-9.33-10.81-10.18-30.28-1.93-41.85L70.9,6.27c1.41-1.98,3.28-3.37,5.41-4.46,8.3-4.25,19.5-.74,22.7,8.29,1.62,4.58,1.06,9.55-1.68,13.38l-26.46,36.95c-1.35,1.88-1.68,4.35-.06,6.23l31.86,36.93c5.34,5.28,5.67,13.39.71,19.18Z" fill="#c6cbe7"/>
+        <path d="M23.98,126.22c-6.12,3.41-13.73,2.5-18.83-2.07C1.85,121.19,0,117.21,0,112.73V15.52C.01,8.36,4.9,2.23,11.77.53c3.11-.77,6.16-.72,9.25.21,6.38,1.93,11,7.75,11,14.57l.02,97.75c0,5.52-3.22,10.45-8.05,13.14Z" fill="#5267b0"/>
+      </svg>
+      Klavi
+    </a>
+    <nav>
+      <a href="#languages">Languages</a>
+      <a href="privacy.html">Privacy</a>
+      <a href="mailto:openwise.ltd@gmail.com">Contact</a>
+    </nav>
+    <span>© 2026 OnWise</span>
+  </div>
+</footer>
+
+<script>
+  // sticky-header hairline + scroll reveals (progressive enhancement; content is visible without JS)
+  var hdr=document.getElementById('top');
+  addEventListener('scroll',function(){hdr.classList.toggle('scrolled',scrollY>8);},{passive:true});
+  if('IntersectionObserver' in window){
+    var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{rootMargin:'0px 0px -10% 0px'});
+    document.querySelectorAll('.reveal').forEach(function(el){io.observe(el);});
+  }else{document.querySelectorAll('.reveal').forEach(function(el){el.classList.add('in');});}
+</script>
 </body>
 </html>
